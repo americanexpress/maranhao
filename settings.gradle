@@ -1,0 +1,3 @@
+rootProject.name = 'maranhao-framework'
+include 'maranhao'
+include 'example'
