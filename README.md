@@ -88,7 +88,7 @@ Your Contributions. Please [fill out the Agreement](https://cla-assistant.io/ame
 Please feel free to open pull requests and see CONTRIBUTING.md for commit formatting details.
 
 ### License
-Any contributions made under this project will be governed by the Apache License 2.0.
+Any contributions made under this project will be governed by the [Apache License 2.0](LICENSE.txt).
 
 ### Code of Conduct
 This project adheres to the [American Express Community Guidelines](CODE_OF_CONDUCT.md). 
