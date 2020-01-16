@@ -20,18 +20,20 @@ import com.americanexpress.blockchain.maranhao.workflow.FlowContext
 import com.americanexpress.blockchain.maranhao.workflow.simpleFlow.SimpleFlowData
 import net.corda.core.contracts.CommandData
 import net.corda.core.contracts.ContractState
+import net.corda.core.contracts.TimeWindow
 import net.corda.core.identity.Party
 
 class SimpleFlowInitializerStep(stateId : String,
                                 state: ContractState?,
                                 commandData: CommandData,
                                 signatories: List<Party>,
+                                timeWindow: TimeWindow?,
                                 val sharedData:
                                     com.americanexpress.blockchain.maranhao.workflow.simpleFlow.SimpleFlowData =
                                         com.americanexpress.blockchain.maranhao.workflow.simpleFlow
                                                 .SimpleFlowData(stateId,
                                         outputState = state, commandData = commandData,
-                                        signatories = signatories)) :
+                                        signatories = signatories, timeWindow = timeWindow)) :
         com.americanexpress.blockchain.maranhao.workflow.simpleFlow.step.SimpleFlowStep {
 
     /**

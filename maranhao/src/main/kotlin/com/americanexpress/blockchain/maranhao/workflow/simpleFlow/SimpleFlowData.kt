@@ -16,10 +16,7 @@
 
 package com.americanexpress.blockchain.maranhao.workflow.simpleFlow
 
-import net.corda.core.contracts.CommandData
-import net.corda.core.contracts.ContractState
-import net.corda.core.contracts.ReferencedStateAndRef
-import net.corda.core.contracts.StateAndRef
+import net.corda.core.contracts.*
 import net.corda.core.crypto.SecureHash
 import net.corda.core.flows.FlowSession
 import net.corda.core.identity.Party
@@ -48,5 +45,6 @@ data class SimpleFlowData(
         var transactionBuilder: TransactionBuilder? = null,
         var signedTransaction: SignedTransaction? = null,
         var fullySignedTransaction: SignedTransaction? = null,
-        var flowSessions: List<FlowSession>? = null
+        var flowSessions: List<FlowSession>? = null,
+        var timeWindow: TimeWindow? = null
 )

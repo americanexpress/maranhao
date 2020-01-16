@@ -19,6 +19,7 @@ package com.americanexpress.blockchain.maranhao.workflow
 import co.paralleluniverse.fibers.Suspendable
 import net.corda.core.contracts.CommandData
 import net.corda.core.contracts.ContractState
+import net.corda.core.contracts.TimeWindow
 import net.corda.core.flows.FlowLogic
 import net.corda.core.flows.FlowSession
 import net.corda.core.identity.CordaX500Name
@@ -26,6 +27,7 @@ import net.corda.core.identity.Party
 import net.corda.core.node.ServiceHub
 import net.corda.core.transactions.SignedTransaction
 import net.corda.core.transactions.TransactionBuilder
+import net.corda.core.utilities.seconds
 import org.mockito.Mockito
 
 val party = Mockito.mock(Party::class.java)
@@ -38,13 +40,14 @@ val partyName = CordaX500Name("Alice", "New York", "US")
 val flowContext = com.americanexpress.blockchain.maranhao.workflow.FlowContext(party, DummyFlow(), serviceHub, DummyCtx())
 val transactionBuilder = Mockito.mock(TransactionBuilder::class.java)
 val flowSession = Mockito.mock(FlowSession::class.java)
+val timeWindow = Mockito.mock(TimeWindow::class.java)
 
 
 val simpleFlowDummyData = com.americanexpress.blockchain.maranhao.workflow.simpleFlow.SimpleFlowData(stateId = "dummy",
         inputState = state, commandData = commandData,
         signatories = signatories, transactionBuilder = transactionBuilder,
         signedTransaction = signedTransaction, fullySignedTransaction = signedTransaction,
-        flowSessions = listOf(flowSession))
+        flowSessions = listOf(flowSession), timeWindow = timeWindow)
 
 class DummyFlow : FlowLogic<SignedTransaction>() {
     @Suspendable
@@ -97,6 +100,7 @@ class TestSimpleFlow(input: DummyData) : com.americanexpress.blockchain.maranhao
     override fun getStateId() : String = "dummy"
     override fun getState() : ContractState = state
     override fun getCommandData() : CommandData = commandData
+    override fun getTimeWindow(): TimeWindow? = timeWindow
 }
 
 val simpleFlow = TestSimpleFlow(DummyData())

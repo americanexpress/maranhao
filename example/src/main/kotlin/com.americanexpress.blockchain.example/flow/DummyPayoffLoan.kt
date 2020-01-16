@@ -1,31 +1,17 @@
 package com.americanexpress.blockchain.example.flow
 
 import co.paralleluniverse.fibers.Suspendable
-import com.americanexpress.blockchain.maranhao.workflow.FlowContext
-import com.americanexpress.blockchain.maranhao.workflow.simpleFlow.ReportToWitnessFlow
-import com.americanexpress.blockchain.maranhao.workflow.simpleFlow.SimpleAcceptorWithWitnessNotifier
-import com.americanexpress.blockchain.maranhao.workflow.simpleFlow.SimpleFlowData
-import com.americanexpress.blockchain.maranhao.workflow.simpleFlow.SimpleMultiStepFlowInitiator
-import com.americanexpress.blockchain.maranhao.workflow.simpleFlow.step.SimpleFlowStep
 import com.americanexpress.blockchain.example.contract.DummyLoanContract
 import com.americanexpress.blockchain.example.state.DummyLoanState
 import net.corda.core.contracts.CommandData
+import net.corda.core.contracts.TimeWindow
 import net.corda.core.contracts.UniqueIdentifier
 import net.corda.core.contracts.requireThat
-import net.corda.core.flows.SignTransactionFlow
-import net.corda.core.flows.FlowSession
-import net.corda.core.flows.InitiatedBy
-import net.corda.core.flows.InitiatingFlow
-import net.corda.core.flows.StartableByRPC
-import net.corda.core.flows.ReceiveFinalityFlow
-import net.corda.core.flows.FlowLogic
-import net.corda.core.flows.ReceiveTransactionFlow
+import net.corda.core.flows.*
 import net.corda.core.identity.Party
 import net.corda.core.node.StatesToRecord
-import net.corda.core.node.services.Vault
-import net.corda.core.node.services.queryBy
-import net.corda.core.node.services.vault.QueryCriteria
 import net.corda.core.transactions.SignedTransaction
+import net.corda.core.utilities.seconds
 
 /**
  * Example implementation for the framework-provided simple flow
@@ -33,29 +19,32 @@ import net.corda.core.transactions.SignedTransaction
 object DummyPayoffLoan {
     @InitiatingFlow
     @StartableByRPC
-     class Initiator(private val id: UniqueIdentifier,
-                          val borrower: Party,
-                          val lender: Party) : com.americanexpress.blockchain.maranhao.workflow.simpleFlow
-            .SimpleMultiStepFlowInitiator<UniqueIdentifier>(id) {
+    class Initiator(private val id: UniqueIdentifier,
+                    val borrower: Party,
+                    val lender: Party) : com.americanexpress.blockchain.maranhao.workflow.simpleFlow
+    .SimpleMultiStepFlowInitiator<UniqueIdentifier>(id) {
 
         @Suspendable
         override fun getListOfSigners(): List<Party> = listOf(lender)
+
         @Suspendable
         override fun getCommandData(): CommandData = DummyLoanContract.Commands.Payoff()
+
         @Suspendable
         override fun getStateId(): String = "com.americanexpress.blockchain.example.contract.DummyLoanContract"
 
-        override var initialProcessingStep = object:
+        @Suspendable
+        override fun getTimeWindow(): TimeWindow? = TimeWindow.withTolerance(serviceHub.clock.instant(), 30.seconds)
+
+        override var initialProcessingStep = object :
                 com.americanexpress.blockchain.maranhao.workflow.simpleFlow.step.SimpleFlowStep {
 
             @Suspendable
             override fun execute(ctx: com.americanexpress.blockchain.maranhao.workflow
-                    .FlowContext<com.americanexpress.blockchain.maranhao.workflow.simpleFlow.SimpleFlowData>) {
+            .FlowContext<com.americanexpress.blockchain.maranhao.workflow.simpleFlow.SimpleFlowData>) {
 
-                val inputCriteria = QueryCriteria.LinearStateQueryCriteria(
-                        linearId = listOf(id), status = Vault.StateStatus.ALL)
-                val queryResult = serviceHub.vaultService.queryBy<DummyLoanState>(inputCriteria)
-                val inputStateAndRef = queryResult.states.single()
+                val inputStateAndRef = getUnconsumedLinearStateByLinearId<DummyLoanState>(id)
+                        ?: throw IllegalArgumentException("vault does not have state with given linear id.")
                 val state = inputStateAndRef.state.data
                 ctx.sharedData!!.outputState = state.copy(value = 0)
             }
@@ -81,7 +70,7 @@ object DummyPayoffLoan {
 
         @Suspendable
         override fun getWitnesses() =
-            listOf(serviceHub.identityService.partiesFromName(WITNESS_NAME, true).single())
+                listOf(serviceHub.identityService.partiesFromName(WITNESS_NAME, true).single())
 
         @Suspendable
         override fun preCall(): SignedTransaction {

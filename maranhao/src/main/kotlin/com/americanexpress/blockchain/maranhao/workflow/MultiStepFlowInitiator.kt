@@ -18,7 +18,13 @@ package com.americanexpress.blockchain.maranhao.workflow
 
 import co.paralleluniverse.fibers.Suspendable
 import com.americanexpress.blockchain.maranhao.NotaryStrategy
+import net.corda.core.contracts.LinearState
+import net.corda.core.contracts.StateAndRef
+import net.corda.core.contracts.UniqueIdentifier
 import net.corda.core.flows.FlowLogic
+import net.corda.core.node.services.Vault
+import net.corda.core.node.services.queryBy
+import net.corda.core.node.services.vault.QueryCriteria
 import net.corda.core.transactions.SignedTransaction
 
 /**
@@ -51,6 +57,20 @@ abstract class MultiStepFlowInitiator<IN, CTX>(val input: IN) : FlowLogic<Signed
     abstract fun getFlowTracker() : com.americanexpress.blockchain.maranhao.workflow.FlowTracker
 
     override val progressTracker = getFlowTracker().progressTracker()
+
+    /**
+     * Function to fetch unconsumed linear state from vault. Flows will invoke this function to consume the 'unspend' state
+     * @param linearId LinearId of the state to query for
+     * @return StateAndRef<T>?
+     *
+     */
+    inline fun <reified T: LinearState> getUnconsumedLinearStateByLinearId(linearId: UniqueIdentifier): StateAndRef<T>? {
+        val queryCriteria = QueryCriteria.LinearStateQueryCriteria(
+                linearId = listOf(linearId),
+                status = Vault.StateStatus.UNCONSUMED
+        )
+        return serviceHub.vaultService.queryBy<T>(queryCriteria).states.singleOrNull()
+    }
 
     /**
      * Implementation of abstract method in FlowLogic

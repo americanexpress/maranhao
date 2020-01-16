@@ -17,6 +17,8 @@
 package com.americanexpress.blockchain.maranhao.workflow.simpleFlow.integration
 
 import co.paralleluniverse.fibers.Suspendable
+import com.americanexpress.blockchain.maranhao.NotaryStrategy
+import com.americanexpress.blockchain.maranhao.workflow.ConfigurableNotaryStrategy
 import net.corda.core.contracts.*
 import net.corda.core.flows.*
 import net.corda.core.identity.AbstractParty
@@ -27,10 +29,7 @@ import net.corda.core.transactions.LedgerTransaction
 import net.corda.core.transactions.SignedTransaction
 import net.corda.core.utilities.getOrThrow
 import net.corda.testing.core.singleIdentity
-import net.corda.testing.node.MockNetwork
-import net.corda.testing.node.MockNetworkNotarySpec
-import net.corda.testing.node.MockNodeParameters
-import net.corda.testing.node.StartedMockNode
+import net.corda.testing.node.*
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
@@ -86,10 +85,37 @@ class SimpleFlowIntegrationTest {
         }
     }
 
+    @InitiatingFlow
+    @StartableByRPC
+    class InitiatorFlowWithConfigNotaryTest(input: Simple) : com.americanexpress.blockchain.maranhao.workflow.simpleFlow.SimpleMultiStepFlowInitiator<Simple>(input) {
+        override fun getListOfSigners(): List<Party> = listOf(bob)
+        override fun getCommandData(): CommandData = SomeContract.Commands.Request()
+        override fun getState(): ContractState = SomeState(value = 6)
+        override fun getNotaryStrategy(): NotaryStrategy = ConfigurableNotaryStrategy("notary")
+        @Suspendable
+        override fun getStateId(): String =
+                "com.americanexpress.blockchain.maranhao.workflow.simpleFlow.integration.SomeContract"
+    }
+
+    @InitiatedBy(InitiatorFlowWithConfigNotaryTest::class)
+    class AcceptorForInitiatorFlowWithConfigNotary(val otherPartySession: FlowSession) : FlowLogic<SignedTransaction>() {
+
+        @Suspendable
+        override fun call(): SignedTransaction {
+            val signTransactionFlow = object : SignTransactionFlow(otherPartySession) {
+                override fun checkTransaction(stx: SignedTransaction) = requireThat {}
+            }
+            val txId = subFlow(signTransactionFlow).id
+            return subFlow(ReceiveFinalityFlow(otherPartySession, expectedTxId = txId))
+        }
+    }
+
     @Before
     fun init() {
         mockNetwork = MockNetwork(listOf("com.americanexpress.blockchain.maranhao.workflow.simpleFlow.integration"),
-                notarySpecs = listOf(MockNetworkNotarySpec(CordaX500Name("Notary", "London", "GB"))))
+                notarySpecs = listOf(MockNetworkNotarySpec(CordaX500Name("Notary", "London", "GB"))),
+                defaultParameters = MockNetworkParameters(listOf(TestCordapp.findCordapp("com.americanexpress.blockchain.maranhao.workflow.simpleFlow.integration").withConfig(mapOf("notary" to "O=Notary,L=London,C=GB"))))
+        )
         a = mockNetwork.createNode(MockNodeParameters())
         b = mockNetwork.createNode(MockNodeParameters())
         alice = a.info.singleIdentity()
@@ -117,4 +143,15 @@ class SimpleFlowIntegrationTest {
         assertEquals(1, b.services.vaultService.queryBy<LinearState>().states.size)
     }
 
+    @Test
+    fun `loan origination completion with flow reading notary from config file`() {
+        val flow = InitiatorFlowWithConfigNotaryTest(Simple(5))
+        var future = a.startFlow(flow)
+        mockNetwork.runNetwork()
+
+        val signedTx = future.getOrThrow()
+        signedTx.verifySignaturesExcept(b.info.singleIdentity().owningKey)
+        assertEquals(signedTx, b.services.validatedTransactions.getTransaction(signedTx.id))
+        assertEquals(1, b.services.vaultService.queryBy<LinearState>().states.size)
+    }
 }

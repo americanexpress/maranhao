@@ -19,6 +19,7 @@ package com.americanexpress.blockchain.maranhao.workflow.simpleFlow
 import co.paralleluniverse.fibers.Suspendable
 import net.corda.core.contracts.CommandData
 import net.corda.core.contracts.ContractState
+import net.corda.core.contracts.TimeWindow
 import net.corda.core.identity.Party
 
 /**
@@ -58,6 +59,12 @@ abstract class SimpleMultiStepFlowInitiator<IN>(input: IN) : com.americanexpress
     abstract fun getCommandData() : CommandData
 
     /**
+     * TimeWindow: If specified in the [TransactionBuilder] notary acts as a timestamp authority for that transaction
+     * @return TimeWindow
+     */
+    open fun getTimeWindow() : TimeWindow? = null
+
+    /**
      * Base class needs the initiated flow steps, so that it can iterate over them
      *
      * @param input IN
@@ -70,7 +77,7 @@ abstract class SimpleMultiStepFlowInitiator<IN>(input: IN) : com.americanexpress
         return arrayOf(
                 com.americanexpress.blockchain.maranhao.workflow.simpleFlow.step
                         .SimpleFlowInitializerStep(getStateId(), getState(),
-                        getCommandData(), getListOfSigners()), initialProcessingStep,
+                        getCommandData(), getListOfSigners(), getTimeWindow()), initialProcessingStep,
                 com.americanexpress.blockchain.maranhao.workflow.simpleFlow.step.SimpleFlowTxGeneratorStep,
                 com.americanexpress.blockchain.maranhao.workflow.simpleFlow.step.SimpleFlowTransactionVerifyStep,
                 com.americanexpress.blockchain.maranhao.workflow.simpleFlow.step.SimpleFlowSignStep,

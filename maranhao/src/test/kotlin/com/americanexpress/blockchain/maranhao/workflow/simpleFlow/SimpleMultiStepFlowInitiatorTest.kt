@@ -57,6 +57,11 @@ class SimpleMultiStepFlowInitiatorTest {
     }
 
     @Test
+    fun getTimeWindow() {
+        assertNotNull(simpleFlow.getTimeWindow())
+    }
+
+    @Test
     fun initialProcessingStepAddedCorrectly() {
         simpleFlow.initialProcessingStep.execute(simpleFlowContext)
         assertNotNull(simpleFlowContext.sharedData!!.outputState)

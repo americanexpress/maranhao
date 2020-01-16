@@ -66,6 +66,10 @@ object SimpleFlowTxGeneratorStep : com.americanexpress.blockchain.maranhao.workf
             txBuilder.addOutputState(ctx.sharedData!!.outputState!!, ctx.sharedData!!.stateId)
         }
 
+        if (ctx.sharedData!!.timeWindow != null) {
+            txBuilder.setTimeWindow(ctx.sharedData!!.timeWindow!!)
+        }
+
         txBuilder.addCommand(txCommand)
 
         ctx.sharedData!!.transactionBuilder = txBuilder

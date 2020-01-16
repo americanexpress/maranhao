@@ -16,6 +16,8 @@
 
 package com.americanexpress.blockchain.maranhao.workflow
 
+import com.americanexpress.blockchain.maranhao.workflow.simpleFlow.integration.SomeState
+import net.corda.core.contracts.UniqueIdentifier
 import org.junit.Test
 import org.junit.Assert.*
 import kotlin.test.assertFails
@@ -44,5 +46,11 @@ class MultiStepFlowInitiatorTest {
     @Test
     fun getInput() {
         assertNotNull(flow.input)
+    }
+
+    @Test
+    fun getUnconsumedLinearStateByLinearId() {
+        val exception = assertFailsWith<IllegalStateException> { flow.getUnconsumedLinearStateByLinearId<SomeState>(UniqueIdentifier()) }
+        assertEquals("You cannot access the flow's state machine until the flow has been started.", exception.message)
     }
 }
