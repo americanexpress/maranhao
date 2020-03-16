@@ -19,14 +19,16 @@ package com.americanexpress.blockchain.maranhao.workflow.simpleFlow.step
 import co.paralleluniverse.fibers.Suspendable
 import net.corda.core.flows.FinalityFlow
 import net.corda.core.transactions.SignedTransaction
+import com.americanexpress.blockchain.maranhao.workflow.simpleFlow.SimpleFlowTracker.FinalizingTransaction
+import com.americanexpress.blockchain.maranhao.workflow.simpleFlow.SimpleFlowData
 
 /**
  *
  * Last step when FinalityFlow is called.
  * @property signedTransaction SignedTransaction? just for testing. Should not be assigned value during runtime
  */
-object SimpleFlowFinalStep : com.americanexpress.blockchain.maranhao.workflow
-    .FinalFlowStep<com.americanexpress.blockchain.maranhao.workflow.simpleFlow.SimpleFlowData> {
+class SimpleFlowFinalStep<OUT> : com.americanexpress.blockchain.maranhao.workflow
+    .FinalFlowStep<com.americanexpress.blockchain.maranhao.workflow.simpleFlow.SimpleFlowData, OUT> {
 
     var signedTransaction: SignedTransaction? = null
 
@@ -38,17 +40,16 @@ object SimpleFlowFinalStep : com.americanexpress.blockchain.maranhao.workflow
      */
     @Suspendable
     override fun execute(ctx: com.americanexpress.blockchain.maranhao.workflow
-    .FlowContext<com.americanexpress.blockchain.maranhao.workflow.simpleFlow.SimpleFlowData>) {
+    .FlowContext<com.americanexpress.blockchain.maranhao.workflow.simpleFlow.SimpleFlowData, OUT>) {
 
         ctx.track(com.americanexpress.blockchain.maranhao.workflow.simpleFlow.SimpleFlowTracker.FinalizingTransaction)
-        com.americanexpress.blockchain.maranhao.workflow.simpleFlow.step.SimpleFlowFinalStep.signedTransaction =
+        signedTransaction =
                 ctx.workFlow.subFlow(
 
                 FinalityFlow(
                         ctx.sharedData!!.fullySignedTransaction!!,
                         ctx.sharedData!!.flowSessions!!.toSet(),
-                        com.americanexpress.blockchain.maranhao.workflow.simpleFlow
-                                .SimpleFlowTracker.FinalizingTransaction.childProgressTracker()))
+                        FinalizingTransaction.childProgressTracker()))
     }
 
     /**
@@ -58,6 +59,6 @@ object SimpleFlowFinalStep : com.americanexpress.blockchain.maranhao.workflow
      * @return SignedTransaction
      */
     @Suspendable override fun getFinalSignedTransaction(): SignedTransaction {
-        return com.americanexpress.blockchain.maranhao.workflow.simpleFlow.step.SimpleFlowFinalStep.signedTransaction!!
+        return signedTransaction!!
     }
 }

@@ -16,7 +16,7 @@ object LoanSchema
 object LoanSchemaV1 : MappedSchema(
         schemaFamily = LoanSchema.javaClass,
         version = 1,
-        mappedTypes = listOf(LoanSchemaV1.PersistentLoan::class.java)) {
+        mappedTypes = listOf(PersistentLoan::class.java)) {
     @Entity
     @Table(name = "loan_states")
     class PersistentLoan(

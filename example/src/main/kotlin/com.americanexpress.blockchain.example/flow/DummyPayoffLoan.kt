@@ -22,7 +22,7 @@ object DummyPayoffLoan {
     class Initiator(private val id: UniqueIdentifier,
                     val borrower: Party,
                     val lender: Party) : com.americanexpress.blockchain.maranhao.workflow.simpleFlow
-    .SimpleMultiStepFlowInitiator<UniqueIdentifier>(id) {
+    .SimpleMultiStepFlowInitiator<UniqueIdentifier, SignedTransaction>(id) {
 
         @Suspendable
         override fun getListOfSigners(): List<Party> = listOf(lender)
@@ -37,17 +37,21 @@ object DummyPayoffLoan {
         override fun getTimeWindow(): TimeWindow? = TimeWindow.withTolerance(serviceHub.clock.instant(), 30.seconds)
 
         override var initialProcessingStep = object :
-                com.americanexpress.blockchain.maranhao.workflow.simpleFlow.step.SimpleFlowStep {
+                com.americanexpress.blockchain.maranhao.workflow.simpleFlow.step.SimpleFlowStep<SignedTransaction> {
 
             @Suspendable
             override fun execute(ctx: com.americanexpress.blockchain.maranhao.workflow
-            .FlowContext<com.americanexpress.blockchain.maranhao.workflow.simpleFlow.SimpleFlowData>) {
+            .FlowContext<com.americanexpress.blockchain.maranhao.workflow.simpleFlow.SimpleFlowData, SignedTransaction>) {
 
                 val inputStateAndRef = getUnconsumedLinearStateByLinearId<DummyLoanState>(id)
                         ?: throw IllegalArgumentException("vault does not have state with given linear id.")
                 val state = inputStateAndRef.state.data
                 ctx.sharedData!!.outputState = state.copy(value = 0)
             }
+        }
+
+        override fun returnValue(): SignedTransaction {
+            return signedTransaction!!
         }
     }
 

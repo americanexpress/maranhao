@@ -18,6 +18,8 @@ package com.americanexpress.blockchain.maranhao.workflow.simpleFlow.step
 
 import co.paralleluniverse.fibers.Suspendable
 import net.corda.core.flows.CollectSignaturesFlow
+import com.americanexpress.blockchain.maranhao.workflow.simpleFlow.SimpleFlowTracker.GatheringSignatures
+import com.americanexpress.blockchain.maranhao.workflow.simpleFlow.SimpleFlowData
 
 /**
  * Simple flow step that gathers signature from all participants passed in to the constructor
@@ -26,8 +28,8 @@ import net.corda.core.flows.CollectSignaturesFlow
  * @constructor
  */
 
-object SimpleFlowGatherSignaturesStep :
-        com.americanexpress.blockchain.maranhao.workflow.simpleFlow.step.SimpleFlowStep {
+class SimpleFlowGatherSignaturesStep<OUT> :
+        com.americanexpress.blockchain.maranhao.workflow.simpleFlow.step.SimpleFlowStep<OUT> {
 
     /**
      * Method override inherited from SimpleFlowStep. workflow will call sequentially all steps by infoking
@@ -36,15 +38,13 @@ object SimpleFlowGatherSignaturesStep :
      */
     @Suspendable
     override fun execute(ctx: com.americanexpress.blockchain.maranhao.workflow
-    .FlowContext<com.americanexpress.blockchain.maranhao.workflow.simpleFlow.SimpleFlowData>) {
+    .FlowContext<com.americanexpress.blockchain.maranhao.workflow.simpleFlow.SimpleFlowData, OUT>) {
 
-        ctx.track(com.americanexpress.blockchain.maranhao.workflow.simpleFlow.SimpleFlowTracker.GatheringSignatures)
+        ctx.track(GatheringSignatures)
         val sessions = ctx.sharedData!!.signatories.map { ctx.workFlow.initiateFlow(it) }
         ctx.sharedData!!.flowSessions = sessions
         ctx.sharedData!!.fullySignedTransaction = ctx.workFlow.subFlow(
                 CollectSignaturesFlow(ctx.sharedData!!.signedTransaction!!,
-                        sessions.toSet(),
-                        com.americanexpress.blockchain.maranhao.workflow.simpleFlow
-                                .SimpleFlowTracker.GatheringSignatures.childProgressTracker()))
+                        sessions.toSet(), GatheringSignatures.childProgressTracker()))
     }
 }

@@ -19,13 +19,14 @@ package com.americanexpress.blockchain.maranhao.workflow.simpleFlow
 import net.corda.core.flows.CollectSignaturesFlow
 import net.corda.core.flows.FinalityFlow
 import net.corda.core.utilities.ProgressTracker
+import com.americanexpress.blockchain.maranhao.workflow.FlowTracker
 
 /**
  * collection of ProgressTracker objects to be used by individual steps in a simple flow
  */
-object SimpleFlowTracker : com.americanexpress.blockchain.maranhao.workflow.FlowTracker {
+object SimpleFlowTracker : FlowTracker {
     object GeneratingTransaction :
-            ProgressTracker.Step("Generating transaction based on new IOU.")
+            ProgressTracker.Step("Generating transaction.")
     object VerifyingTransaction :
             ProgressTracker.Step("Verifying contract constraints.")
     object SigningTransaction :
@@ -41,10 +42,10 @@ object SimpleFlowTracker : com.americanexpress.blockchain.maranhao.workflow.Flow
     }
 
     override fun progressTracker() = ProgressTracker(
-            com.americanexpress.blockchain.maranhao.workflow.simpleFlow.SimpleFlowTracker.GeneratingTransaction,
-            com.americanexpress.blockchain.maranhao.workflow.simpleFlow.SimpleFlowTracker.VerifyingTransaction,
-            com.americanexpress.blockchain.maranhao.workflow.simpleFlow.SimpleFlowTracker.SigningTransaction,
-            com.americanexpress.blockchain.maranhao.workflow.simpleFlow.SimpleFlowTracker.GatheringSignatures,
-            com.americanexpress.blockchain.maranhao.workflow.simpleFlow.SimpleFlowTracker.FinalizingTransaction
+            GeneratingTransaction,
+            VerifyingTransaction,
+            SigningTransaction,
+            GatheringSignatures,
+            FinalizingTransaction
     )
 }

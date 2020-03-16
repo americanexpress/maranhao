@@ -23,5 +23,5 @@ import com.americanexpress.blockchain.maranhao.workflow.simpleFlow.SimpleFlowDat
  * Helper interface that removes generic dependencies for simple flows
  */
 
-interface SimpleFlowStep : com.americanexpress.blockchain.maranhao.workflow
-    .FlowStep<com.americanexpress.blockchain.maranhao.workflow.simpleFlow.SimpleFlowData>
+interface SimpleFlowStep<OUT> : com.americanexpress.blockchain.maranhao.workflow
+    .FlowStep<com.americanexpress.blockchain.maranhao.workflow.simpleFlow.SimpleFlowData, OUT>

@@ -37,24 +37,32 @@ import net.corda.core.transactions.SignedTransaction
  * @property progressTracker ProgressTracker
  * @constructor
  */
-abstract class MultiStepFlowInitiator<IN, CTX>(val input: IN) : FlowLogic<SignedTransaction>() {
+abstract class MultiStepFlowInitiator<IN, CTX, OUT>(val input: IN) : FlowLogic<OUT>() {
 
     @Suspendable
-    abstract fun getFlowSteps(input: IN) : Array<com.americanexpress.blockchain.maranhao.workflow.FlowStep<CTX>>
+    abstract fun getFlowSteps(input: IN) : Array<FlowStep<CTX, OUT>>
 
     /**
      * By default uses FirstNotaryStrategy, unless overriden
      *
      * @return NotaryStrategy
      */
-    open fun getNotaryStrategy() : NotaryStrategy =
-            com.americanexpress.blockchain.maranhao.workflow.FirstNotaryStrategy()
+    open fun getNotaryStrategy() : NotaryStrategy = FirstNotaryStrategy()
+
+    /**
+     * By default uses DefaultLogStep. Should be overwritten, especially since the context
+     * sharedData may contain sensitive info.
+     *
+     * @return LogStep<CTX, OUT>
+     */
+
+    open fun getLog(): Log<CTX, OUT> = DefaultLog()
 
     /**
      * Must implement this method to return FlowTracker
      * @return com.americanexpress.blockchain.maranhao.workflow.FlowTracker
      */
-    abstract fun getFlowTracker() : com.americanexpress.blockchain.maranhao.workflow.FlowTracker
+    abstract fun getFlowTracker() : FlowTracker
 
     override val progressTracker = getFlowTracker().progressTracker()
 
@@ -72,23 +80,32 @@ abstract class MultiStepFlowInitiator<IN, CTX>(val input: IN) : FlowLogic<Signed
         return serviceHub.vaultService.queryBy<T>(queryCriteria).states.singleOrNull()
     }
 
+    abstract fun returnValue(): OUT
+
+    var signedTransaction: SignedTransaction? = null
+
     /**
      * Implementation of abstract method in FlowLogic
      * @return SignedTransaction
      */
     @Suspendable
-    override fun call(): SignedTransaction {
-        val ctx = com.americanexpress.blockchain.maranhao.workflow.FlowContext<CTX>(getNotaryStrategy()
+    override fun call(): OUT {
+        val ctx = FlowContext<CTX, OUT>(getNotaryStrategy()
                 .getNotary(serviceHub), this, serviceHub)
 
+        val logStep = getLog()
         val flowSteps = getFlowSteps(input)
 
         flowSteps.forEach {
             it.execute(ctx)
+            logger.info(logStep.logMessage(ctx))
         }
 
-        val finalFlowStep = flowSteps.last() as com.americanexpress.blockchain.maranhao.workflow.FinalFlowStep<CTX>
-        return finalFlowStep.getFinalSignedTransaction()
+        val finalFlowStep = flowSteps.last() as FinalFlowStep<CTX, OUT>
+        logger.info(logStep.logMessage(ctx))
+        signedTransaction = finalFlowStep.getFinalSignedTransaction()
+
+        return returnValue()
     }
 }
 

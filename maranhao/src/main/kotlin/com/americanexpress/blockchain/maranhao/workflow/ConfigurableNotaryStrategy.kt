@@ -42,6 +42,5 @@ class ConfigurableNotaryStrategy(private val notaryConfigKey: String) : NotarySt
             val notaryParty = serviceHub.networkMapCache.getNotary(notaryX500Name)
             notaryParty!!
         }
-
     }
 }

@@ -24,6 +24,6 @@ class SimpleFlowTrackerTest {
 
     @Test
     fun progressTracker() {
-        assertNotNull(com.americanexpress.blockchain.maranhao.workflow.simpleFlow.SimpleFlowTracker.progressTracker())
+        assertNotNull(SimpleFlowTracker.progressTracker())
     }
 }

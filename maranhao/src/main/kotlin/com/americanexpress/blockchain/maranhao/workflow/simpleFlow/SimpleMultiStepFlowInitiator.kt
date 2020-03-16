@@ -21,18 +21,28 @@ import net.corda.core.contracts.CommandData
 import net.corda.core.contracts.ContractState
 import net.corda.core.contracts.TimeWindow
 import net.corda.core.identity.Party
+import com.americanexpress.blockchain.maranhao.workflow.MultiStepFlowInitiator
+import com.americanexpress.blockchain.maranhao.workflow.simpleFlow.logging.SimpleLog
 
 /**
  * simple flow implementation
  * @param IN - typically a business object (e.g. a Loan)
  * @constructor
  */
-abstract class SimpleMultiStepFlowInitiator<IN>(input: IN) : com.americanexpress.blockchain.maranhao.workflow
-    .MultiStepFlowInitiator<IN, com.americanexpress.blockchain.maranhao.workflow.simpleFlow.SimpleFlowData>(input) {
+abstract class SimpleMultiStepFlowInitiator<IN, OUT>(input: IN) : com.americanexpress.blockchain.maranhao.workflow
+    .MultiStepFlowInitiator<IN, SimpleFlowData, OUT>(input) {
 
-    override fun getFlowTracker(): com.americanexpress.blockchain.maranhao.workflow.FlowTracker {
-        return com.americanexpress.blockchain.maranhao.workflow.simpleFlow.SimpleFlowTracker
-    }
+    override fun getFlowTracker() = SimpleFlowTracker
+
+    /**
+     * By default uses DefaultLogStep. Should be overwritten, especially since the context
+     * sharedData may contain sensitive info.
+     *
+     * @return LogStep<CTX, OUT>
+     */
+
+    override fun getLog() = SimpleLog<OUT>()
+
 
     /**
      * list of signers participating in this flow. If any is missing, workflow will throw an error
@@ -72,27 +82,28 @@ abstract class SimpleMultiStepFlowInitiator<IN>(input: IN) : com.americanexpress
      */
     @Suspendable
     override fun getFlowSteps(input: IN): Array<com.americanexpress.blockchain.maranhao.workflow
-        .FlowStep<com.americanexpress.blockchain.maranhao.workflow.simpleFlow.SimpleFlowData>> {
+        .FlowStep<SimpleFlowData, OUT>> {
 
         return arrayOf(
                 com.americanexpress.blockchain.maranhao.workflow.simpleFlow.step
-                        .SimpleFlowInitializerStep(getStateId(), getState(),
+                        .SimpleFlowInitializerStep<OUT>(getStateId(), getState(),
                         getCommandData(), getListOfSigners(), getTimeWindow()), initialProcessingStep,
-                com.americanexpress.blockchain.maranhao.workflow.simpleFlow.step.SimpleFlowTxGeneratorStep,
-                com.americanexpress.blockchain.maranhao.workflow.simpleFlow.step.SimpleFlowTransactionVerifyStep,
-                com.americanexpress.blockchain.maranhao.workflow.simpleFlow.step.SimpleFlowSignStep,
-                com.americanexpress.blockchain.maranhao.workflow.simpleFlow.step.SimpleFlowGatherSignaturesStep,
-                com.americanexpress.blockchain.maranhao.workflow.simpleFlow.step.SimpleFlowFinalStep
+                com.americanexpress.blockchain.maranhao.workflow.simpleFlow.step.SimpleFlowTxGeneratorStep(),
+                com.americanexpress.blockchain.maranhao.workflow.simpleFlow.step.SimpleFlowTransactionVerifyStep(),
+                com.americanexpress.blockchain.maranhao.workflow.simpleFlow.step.SimpleFlowSignStep(),
+                com.americanexpress.blockchain.maranhao.workflow.simpleFlow.step.SimpleFlowGatherSignaturesStep(),
+                com.americanexpress.blockchain.maranhao.workflow.simpleFlow.step.SimpleFlowFinalStep()
         )
     }
 
     /**
      * Any implementation in need to do extra processing can override this step
      */
-    public open var initialProcessingStep: com.americanexpress.blockchain.maranhao.workflow.simpleFlow.step
-        .SimpleFlowStep = object: com.americanexpress.blockchain.maranhao.workflow.simpleFlow.step.SimpleFlowStep {
+
+    open var initialProcessingStep: com.americanexpress.blockchain.maranhao.workflow.simpleFlow.step
+        .SimpleFlowStep<OUT> = object: com.americanexpress.blockchain.maranhao.workflow.simpleFlow.step.SimpleFlowStep<OUT> {
         override fun execute(ctx: com.americanexpress.blockchain.maranhao.workflow
-            .FlowContext<com.americanexpress.blockchain.maranhao.workflow.simpleFlow.SimpleFlowData>) {
+            .FlowContext<SimpleFlowData, OUT>) {
             // this is a NOP implementation
         }
     }

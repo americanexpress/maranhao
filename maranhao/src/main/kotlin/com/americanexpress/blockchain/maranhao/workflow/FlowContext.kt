@@ -32,9 +32,9 @@ import net.corda.core.utilities.ProgressTracker
  * @property sharedData CTX?
  * @constructor
  */
-open class FlowContext<CTX>(
+open class FlowContext<CTX, OUT>(
         var notary: Party,
-        var workFlow: FlowLogic<SignedTransaction>,
+        var workFlow: FlowLogic<OUT>,
         var serviceHub: ServiceHub,
         var sharedData: CTX? = null
 ) {

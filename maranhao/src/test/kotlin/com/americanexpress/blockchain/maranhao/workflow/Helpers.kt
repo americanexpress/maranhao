@@ -29,6 +29,7 @@ import net.corda.core.transactions.SignedTransaction
 import net.corda.core.transactions.TransactionBuilder
 import net.corda.core.utilities.seconds
 import org.mockito.Mockito
+import javax.annotation.Signed
 
 val party = Mockito.mock(Party::class.java)
 val signatories = listOf(party)
@@ -37,7 +38,7 @@ val serviceHub = Mockito.mock(ServiceHub::class.java)
 val signedTransaction = Mockito.mock(SignedTransaction::class.java)
 val commandData = Mockito.mock(CommandData::class.java)
 val partyName = CordaX500Name("Alice", "New York", "US")
-val flowContext = com.americanexpress.blockchain.maranhao.workflow.FlowContext(party, DummyFlow(), serviceHub, DummyCtx())
+val flowContext = FlowContext(party, DummyFlow(), serviceHub, DummyCtx())
 val transactionBuilder = Mockito.mock(TransactionBuilder::class.java)
 val flowSession = Mockito.mock(FlowSession::class.java)
 val timeWindow = Mockito.mock(TimeWindow::class.java)
@@ -66,8 +67,8 @@ class DummyData {
     var dummyValue: Int = 0
 }
 
-class DummyStep : com.americanexpress.blockchain.maranhao.workflow.FinalFlowStep<DummyCtx> {
-    override fun execute(ctx: com.americanexpress.blockchain.maranhao.workflow.FlowContext<DummyCtx>) {
+class DummyStep : com.americanexpress.blockchain.maranhao.workflow.FinalFlowStep<DummyCtx, SignedTransaction> {
+    override fun execute(ctx: com.americanexpress.blockchain.maranhao.workflow.FlowContext<DummyCtx, SignedTransaction>) {
     }
 
     override fun getFinalSignedTransaction(): SignedTransaction {
@@ -76,9 +77,13 @@ class DummyStep : com.americanexpress.blockchain.maranhao.workflow.FinalFlowStep
 }
 
 class TestMultiStepFlowInitiator(input: DummyData) : com.americanexpress.blockchain.maranhao.workflow
-    .MultiStepFlowInitiator<DummyData, DummyCtx>(input) {
+    .MultiStepFlowInitiator<DummyData, DummyCtx, SignedTransaction>(input) {
 
-    override fun getFlowTracker(): com.americanexpress.blockchain.maranhao.workflow.FlowTracker {
+    override fun returnValue(): SignedTransaction {
+        return signedTransaction!!
+    }
+
+    override fun getFlowTracker(): FlowTracker {
         return com.americanexpress.blockchain.maranhao.workflow.simpleFlow.SimpleFlowTracker
     }
 
@@ -88,26 +93,30 @@ class TestMultiStepFlowInitiator(input: DummyData) : com.americanexpress.blockch
     fun getCommandData() : CommandData = commandData
 
     @Suspendable
-    override fun getFlowSteps(input: DummyData): Array<com.americanexpress.blockchain.maranhao.workflow.FlowStep<DummyCtx>> {
+    override fun getFlowSteps(input: DummyData): Array<com.americanexpress.blockchain.maranhao.workflow.FlowStep<DummyCtx, SignedTransaction>> {
         return arrayOf(DummyStep())
     }
 }
 
 class TestSimpleFlow(input: DummyData) : com.americanexpress.blockchain.maranhao.workflow.simpleFlow
-    .SimpleMultiStepFlowInitiator<DummyData>(input) {
+    .SimpleMultiStepFlowInitiator<DummyData, SignedTransaction>(input) {
 
     override fun getListOfSigners(): List<Party> = listOf(party)
     override fun getStateId() : String = "dummy"
     override fun getState() : ContractState = state
     override fun getCommandData() : CommandData = commandData
     override fun getTimeWindow(): TimeWindow? = timeWindow
+
+    override fun returnValue(): SignedTransaction {
+        return signedTransaction!!
+    }
 }
 
 val simpleFlow = TestSimpleFlow(DummyData())
 val simpleFlowContext = com.americanexpress.blockchain.maranhao.workflow
         .FlowContext(party, simpleFlow, serviceHub, simpleFlowDummyData)
 
-val simpleTxGenStep = com.americanexpress.blockchain.maranhao.workflow.simpleFlow.step.SimpleFlowTxGeneratorStep
+val simpleTxGenStep = com.americanexpress.blockchain.maranhao.workflow.simpleFlow.step.SimpleFlowTxGeneratorStep<SignedTransaction>()
 
 class TestSimpleAcceptor : com.americanexpress.blockchain.maranhao.workflow.simpleFlow
     .SimpleAcceptorWithWitnessNotifier() {

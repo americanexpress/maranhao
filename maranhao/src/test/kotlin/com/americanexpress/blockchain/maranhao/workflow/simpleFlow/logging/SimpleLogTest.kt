@@ -14,21 +14,20 @@
  * permissions and limitations under the License.
  */
 
-package com.americanexpress.blockchain.maranhao.workflow
 
+package com.americanexpress.blockchain.maranhao.workflow.simpleFlow.logging
+
+import com.americanexpress.blockchain.maranhao.workflow.simpleFlow.logging.SimpleLog
+import com.americanexpress.blockchain.maranhao.workflow.simpleFlowContext
+import net.corda.core.transactions.SignedTransaction
 import org.junit.Assert.*
 import org.junit.Test
 
-class FlowContextTest {
+class SimpleLogTest {
     @Test
-    fun `should create FlowContext and allow for tracking`() {
-        try {
-            flowContext.track(com.americanexpress.blockchain.maranhao.workflow.simpleFlow
-                                    .SimpleFlowTracker.GeneratingTransaction)
-        } catch (e: Exception) {
-            fail("Should not have thrown any exception")
-        }
+    fun logMessage() {
+        val simpleLog = SimpleLog<SignedTransaction>()
+        val message = simpleLog.logMessage(simpleFlowContext)
+        assertNotNull(message)
     }
-
 }
-

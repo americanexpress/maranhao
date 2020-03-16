@@ -19,6 +19,8 @@ package com.americanexpress.blockchain.maranhao.workflow.simpleFlow.step
 import co.paralleluniverse.fibers.Suspendable
 import net.corda.core.contracts.Command
 import net.corda.core.transactions.TransactionBuilder
+import com.americanexpress.blockchain.maranhao.workflow.FlowContext
+import com.americanexpress.blockchain.maranhao.workflow.simpleFlow.SimpleFlowData
 
 /**
  * simple flow initial step of generating transaction builder and then passing it along
@@ -30,7 +32,7 @@ import net.corda.core.transactions.TransactionBuilder
  * @property signatories List<Party> - list of parties that need to sign off
  * @constructor
  */
-object SimpleFlowTxGeneratorStep : com.americanexpress.blockchain.maranhao.workflow.simpleFlow.step.SimpleFlowStep {
+class SimpleFlowTxGeneratorStep<OUT> : com.americanexpress.blockchain.maranhao.workflow.simpleFlow.step.SimpleFlowStep<OUT> {
 
     /**
      * overridden function called by flow iteratively
@@ -40,7 +42,7 @@ object SimpleFlowTxGeneratorStep : com.americanexpress.blockchain.maranhao.workf
     @Suspendable
     override fun execute(
             ctx: com.americanexpress.blockchain.maranhao.workflow
-            .FlowContext<com.americanexpress.blockchain.maranhao.workflow.simpleFlow.SimpleFlowData>) {
+            .FlowContext<com.americanexpress.blockchain.maranhao.workflow.simpleFlow.SimpleFlowData, OUT>) {
 
         ctx.track(com.americanexpress.blockchain.maranhao.workflow.simpleFlow.SimpleFlowTracker.GeneratingTransaction)
 

@@ -5,8 +5,8 @@ buildscript {
     
     ext {
         corda_release_group = 'net.corda'
-        corda_release_version = '4.1'
-        corda_gradle_plugins_version = '4.0.45'
+        corda_release_version = '4.3'
+        corda_gradle_plugins_version = '5.0.4'
         kotlin_version = '1.2.71'
         junit_version = '4.12'
         quasar_version = '0.7.10'
@@ -19,6 +19,7 @@ buildscript {
         jacoco_version = '0.8.2'
         tooling_api_version = '4.10.1'
         corda_platform_version = '4'.toInteger()
+        gson_version = '2.8.6'
     }
 
     repositories {
@@ -26,7 +27,7 @@ buildscript {
         mavenCentral()
         jcenter()
         maven { url 'https://ci-artifactory.corda.r3cev.com/artifactory/corda' }
-        maven { url 'https://mvnrepository.com/artifact/org.gradle/gradle-tooling-api' }
+        // maven { url 'https://mvnrepository.com/artifact/org.gradle/gradle-tooling-api' }
         maven { url "http://dl.bintray.com/arturbosch/code-analysis" }
     }
 
@@ -55,7 +56,7 @@ allprojects {
         mavenCentral()
         maven { url 'https://ci-artifactory.corda.r3cev.com/artifactory/corda-releases' }
         maven { url 'https://jitpack.io' }
-        maven { url 'http://repo.gradle.org/gradle/libs-releases-local'}
+        maven { url 'https://repo.gradle.org/gradle/libs-releases-local'}
     }
 
     tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile) {

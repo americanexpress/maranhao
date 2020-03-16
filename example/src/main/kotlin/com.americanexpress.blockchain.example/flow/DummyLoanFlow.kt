@@ -16,6 +16,10 @@ import net.corda.core.flows.SignTransactionFlow
 import net.corda.core.flows.ReceiveFinalityFlow
 import net.corda.core.identity.Party
 import net.corda.core.transactions.SignedTransaction
+import com.americanexpress.blockchain.maranhao.workflow.simpleFlow.SimpleMultiStepFlowInitiator
+import com.americanexpress.blockchain.maranhao.workflow.simpleFlow.step.SimpleFlowStep
+import com.americanexpress.blockchain.maranhao.workflow.simpleFlow.SimpleFlowData
+import com.americanexpress.blockchain.maranhao.workflow.simpleFlow.logging.SimpleLog
 
 /**
  * Example implementation for the framework-provided simple flow
@@ -32,7 +36,7 @@ object DummyLoanFlow {
     @InitiatingFlow
     @StartableByRPC
     class Initiator(input: Loan) : com.americanexpress.blockchain.maranhao.workflow.simpleFlow
-        .SimpleMultiStepFlowInitiator<Loan>(input) {
+        .SimpleMultiStepFlowInitiator<Loan, SignedTransaction>(input) {
 
         @Suspendable override fun getListOfSigners(): List<Party> = listOf(input.lender, input.borrower)
         @Suspendable override fun getCommandData(): CommandData = DummyLoanContract.Commands.Request()
@@ -43,13 +47,17 @@ object DummyLoanFlow {
                 "com.americanexpress.blockchain.example.contract.DummyLoanContract"
 
         override var initialProcessingStep = object:
-                com.americanexpress.blockchain.maranhao.workflow.simpleFlow.step.SimpleFlowStep {
+                SimpleFlowStep<SignedTransaction> {
             override fun execute(ctx: com.americanexpress.blockchain.maranhao.workflow
-                .FlowContext<com.americanexpress.blockchain.maranhao.workflow.simpleFlow.SimpleFlowData>) {
+                .FlowContext<SimpleFlowData, SignedTransaction>) {
 
                 val state = ctx.sharedData!!.outputState as DummyLoanState
                 ctx.sharedData!!.outputState = state.copy(interestRate = 0.12F)
             }
+        }
+
+        override fun returnValue(): SignedTransaction {
+            return signedTransaction!!
         }
     }
 
@@ -60,7 +68,7 @@ object DummyLoanFlow {
      * @property otherPartySession FlowSession
      * @constructor
      */
-    @InitiatedBy(DummyLoanFlow.Initiator::class)
+    @InitiatedBy(Initiator::class)
     class Acceptor(val otherPartySession: FlowSession) : FlowLogic<SignedTransaction>() {
 
         @Suspendable

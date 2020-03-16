@@ -31,12 +31,12 @@ class FirstNotaryStrategyTest {
         val networkMapCache = Mockito.mock(NetworkMapCache::class.java)
         val publicKey = Mockito.mock(PublicKey::class.java)
         Mockito.`when`(networkMapCache.notaryIdentities)
-                .thenReturn(listOf(Party(com.americanexpress.blockchain.maranhao.workflow.partyName, publicKey)))
-        Mockito.`when`(com.americanexpress.blockchain.maranhao.workflow.serviceHub.networkMapCache)
+                .thenReturn(listOf(Party(partyName, publicKey)))
+        Mockito.`when`(serviceHub.networkMapCache)
                 .thenReturn(networkMapCache)
         Assert.assertNotNull(
-                com.americanexpress.blockchain.maranhao.workflow.FirstNotaryStrategy()
-                        .getNotary(com.americanexpress.blockchain.maranhao.workflow.serviceHub)
+                FirstNotaryStrategy()
+                        .getNotary(serviceHub)
         )
     }
 }

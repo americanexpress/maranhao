@@ -20,6 +20,7 @@ import com.americanexpress.blockchain.maranhao.workflow.*
 import net.corda.core.contracts.LinearState
 import net.corda.core.contracts.UniqueIdentifier
 import net.corda.core.identity.AbstractParty
+import net.corda.core.transactions.SignedTransaction
 import org.junit.Test
 
 import org.junit.Assert.*
@@ -37,10 +38,9 @@ class SimpleMultiStepFlowInitiatorTest {
     @Before
     fun init() {
         simpleFlow.initialProcessingStep = object :
-                com.americanexpress.blockchain.maranhao.workflow.simpleFlow.step.SimpleFlowStep {
+                com.americanexpress.blockchain.maranhao.workflow.simpleFlow.step.SimpleFlowStep<SignedTransaction> {
 
-            override fun execute(ctx: com.americanexpress.blockchain.maranhao.workflow
-                .FlowContext<com.americanexpress.blockchain.maranhao.workflow.simpleFlow.SimpleFlowData>) {
+            override fun execute(ctx: FlowContext<SimpleFlowData, SignedTransaction>) {
                 ctx.sharedData?.outputState = ExampleState(1000)
             }
         }

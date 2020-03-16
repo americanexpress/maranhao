@@ -65,7 +65,7 @@ class DummyLoanFlowTest {
         regulator = r.info.singleIdentity()
 
         // For real nodes this happens automatically, but we have to manually register the flow for tests.
-        listOf(a, b, s).forEach { it.registerInitiatedFlow(DummyLoanFlow.Acceptor::class.java) }
+        listOf(a, b, s).forEach { it.registerInitiatedFlow(Acceptor::class.java) }
         listOf(a, b, s).forEach { it.registerInitiatedFlow(DummyPayoffLoan.AcceptorWithNotifier::class.java) }
         r.registerInitiatedFlow(DummyPayoffLoan.ReceiveRegulatoryReportFlow::class.java)
 
@@ -81,7 +81,7 @@ class DummyLoanFlowTest {
     fun `loan origination completion`() {
         val testId = UniqueIdentifier()
 
-        val flow = DummyLoanFlow.Initiator(Loan(id = testId, amount = 1000,
+        val flow = Initiator(Loan(id = testId, amount = 1000,
                 interest = 0F, borrower = bob, lender = susan))
         var future = a.startFlow(flow)
         network.runNetwork()

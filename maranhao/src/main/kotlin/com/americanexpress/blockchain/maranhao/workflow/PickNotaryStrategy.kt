@@ -1,5 +1,5 @@
 /**
- * Copyright 2019 American Express Travel Related Services Company, Inc.
+ * Copyright 2020 American Express Travel Related Services Company, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,18 +17,22 @@
 package com.americanexpress.blockchain.maranhao.workflow
 
 import co.paralleluniverse.fibers.Suspendable
-import net.corda.core.transactions.SignedTransaction
+import com.americanexpress.blockchain.maranhao.NotaryStrategy
+import net.corda.core.identity.CordaX500Name
+import net.corda.core.identity.Party
+import net.corda.core.node.ServiceHub
 
-/**
- * Last step that calls FinalityFlow
- * @param CTX
- */
-interface FinalFlowStep<CTX, OUT> : FlowStep<CTX, OUT> {
+class PickNotaryStrategy(private val notaryIdentity: String) : NotaryStrategy {
 
     /**
-     * Method returns the transaction once finality subflow completes
-     * @return SignedTransaction
+     * Gets the notary with id passed in constructor
+     * @param serviceHub ServiceHub
+     * @return Party
      */
     @Suspendable
-    fun getFinalSignedTransaction() : SignedTransaction
+    override fun getNotary(serviceHub: ServiceHub): Party {
+        val notaryX500Name = CordaX500Name.parse(notaryIdentity)
+        val notaryParty = serviceHub.networkMapCache.getNotary(notaryX500Name)
+        return notaryParty!!
+    }
 }

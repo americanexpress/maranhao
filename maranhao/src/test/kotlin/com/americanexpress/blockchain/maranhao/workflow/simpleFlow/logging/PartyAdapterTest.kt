@@ -14,21 +14,31 @@
  * permissions and limitations under the License.
  */
 
-package com.americanexpress.blockchain.maranhao.workflow
 
-import org.junit.Assert.*
+package com.americanexpress.blockchain.maranhao.workflow.simpleFlow.logging
+
+import com.americanexpress.blockchain.maranhao.workflow.party
+import com.google.gson.GsonBuilder
+import net.corda.core.identity.Party
 import org.junit.Test
 
-class FlowContextTest {
+import org.junit.Assert.*
+
+class PartyAdapterTest {
+
     @Test
-    fun `should create FlowContext and allow for tracking`() {
-        try {
-            flowContext.track(com.americanexpress.blockchain.maranhao.workflow.simpleFlow
-                                    .SimpleFlowTracker.GeneratingTransaction)
-        } catch (e: Exception) {
-            fail("Should not have thrown any exception")
-        }
+    fun write() {
+        val gson = GsonBuilder()
+                .registerTypeAdapter(Party::class.java, PartyAdapter())
+                .serializeNulls()
+                .create()
+
+        val ret = gson.toJson(party, Party::class.java)
+
+        assertNotNull(ret)
     }
 
+    @Test
+    fun read() {
+    }
 }
-

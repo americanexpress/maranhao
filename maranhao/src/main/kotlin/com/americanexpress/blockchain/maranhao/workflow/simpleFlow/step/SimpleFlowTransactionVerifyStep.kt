@@ -17,13 +17,16 @@
 package com.americanexpress.blockchain.maranhao.workflow.simpleFlow.step
 
 import co.paralleluniverse.fibers.Suspendable
+import com.americanexpress.blockchain.maranhao.workflow.FlowContext
+import com.americanexpress.blockchain.maranhao.workflow.simpleFlow.SimpleFlowData
+import com.americanexpress.blockchain.maranhao.workflow.simpleFlow.SimpleFlowTracker.VerifyingTransaction
 
 
 /**
  * simple flow verification step. Contract is called to make sure conditions are met
  */
-object SimpleFlowTransactionVerifyStep :
-        com.americanexpress.blockchain.maranhao.workflow.simpleFlow.step.SimpleFlowStep {
+class SimpleFlowTransactionVerifyStep<OUT> :
+        com.americanexpress.blockchain.maranhao.workflow.simpleFlow.step.SimpleFlowStep<OUT> {
 
     /**
      * overridden function called by flow iteratively
@@ -33,9 +36,9 @@ object SimpleFlowTransactionVerifyStep :
     @Suspendable
     override fun execute(
             ctx: com.americanexpress.blockchain.maranhao.workflow
-            .FlowContext<com.americanexpress.blockchain.maranhao.workflow.simpleFlow.SimpleFlowData>) {
+            .FlowContext<com.americanexpress.blockchain.maranhao.workflow.simpleFlow.SimpleFlowData, OUT>) {
 
-        ctx.track(com.americanexpress.blockchain.maranhao.workflow.simpleFlow.SimpleFlowTracker.VerifyingTransaction)
+        ctx.track(VerifyingTransaction)
 
         ctx.sharedData!!.transactionBuilder!!.verify(ctx.serviceHub)
     }

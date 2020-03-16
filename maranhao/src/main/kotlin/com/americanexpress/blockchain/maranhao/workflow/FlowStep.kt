@@ -22,7 +22,7 @@ import co.paralleluniverse.fibers.Suspendable
  * All steps in the framework must implement this interface
  * @param CTX
  */
-interface FlowStep<CTX> {
+interface FlowStep<CTX, OUT> {
     @Suspendable
-    fun execute(ctx: com.americanexpress.blockchain.maranhao.workflow.FlowContext<CTX>)
+    fun execute(ctx: com.americanexpress.blockchain.maranhao.workflow.FlowContext<CTX, OUT>)
 }

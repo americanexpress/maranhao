@@ -59,6 +59,11 @@ do in the overridden `call()` function
 [example](./example/src/main/kotlin/com.americanexpress.blockchain.example/flow/DummyPayoffLoan.kt) 
 project
 
+### Logging
+
+By default, Maranhao `SimpleMultiStepFlowInitiator` dumps the context `CTX` via default logger.
+One can add its own logger, especially if the context contains sensitive data. 
+
 ### Installation
 
 Clone, then just run the command below. The script will install all required libraries: `./gradlew`

@@ -16,6 +16,7 @@
 
 package com.americanexpress.blockchain.maranhao.workflow.simpleFlow
 
+import com.google.gson.annotations.Expose
 import net.corda.core.contracts.*
 import net.corda.core.crypto.SecureHash
 import net.corda.core.flows.FlowSession
@@ -34,13 +35,17 @@ import net.corda.core.transactions.TransactionBuilder
  * @constructor
  */
 data class SimpleFlowData(
+        @Expose
         var stateId : String,
+        @Expose
         var inputState: ContractState? = null,
         var stateAndRef: StateAndRef<ContractState>? = null,
         var referenceState: ReferencedStateAndRef<ContractState>? = null,
         var attachment: SecureHash? = null,
+        @Expose
         var outputState: ContractState? = null,
         var commandData: CommandData,
+        @Expose
         var signatories: List<Party>,
         var transactionBuilder: TransactionBuilder? = null,
         var signedTransaction: SignedTransaction? = null,

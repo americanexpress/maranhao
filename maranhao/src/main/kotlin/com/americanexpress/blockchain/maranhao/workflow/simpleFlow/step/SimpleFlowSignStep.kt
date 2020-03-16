@@ -17,12 +17,15 @@
 package com.americanexpress.blockchain.maranhao.workflow.simpleFlow.step
 
 import co.paralleluniverse.fibers.Suspendable
+import com.americanexpress.blockchain.maranhao.workflow.simpleFlow.SimpleFlowData
+import com.americanexpress.blockchain.maranhao.workflow.simpleFlow.SimpleFlowTracker.SigningTransaction
+import com.americanexpress.blockchain.maranhao.workflow.FlowContext
 
 
 /**
  * simple flow step to sign initial transaction
  */
-object SimpleFlowSignStep : com.americanexpress.blockchain.maranhao.workflow.simpleFlow.step.SimpleFlowStep {
+class SimpleFlowSignStep<OUT> : com.americanexpress.blockchain.maranhao.workflow.simpleFlow.step.SimpleFlowStep<OUT> {
 
     /**
      * overridden function called by flow iteratively
@@ -30,9 +33,9 @@ object SimpleFlowSignStep : com.americanexpress.blockchain.maranhao.workflow.sim
      */
     @Suspendable
     override fun execute(ctx: com.americanexpress.blockchain.maranhao.workflow
-    .FlowContext<com.americanexpress.blockchain.maranhao.workflow.simpleFlow.SimpleFlowData>) {
+    .FlowContext<com.americanexpress.blockchain.maranhao.workflow.simpleFlow.SimpleFlowData, OUT>) {
 
-        ctx.track(com.americanexpress.blockchain.maranhao.workflow.simpleFlow.SimpleFlowTracker.SigningTransaction)
+        ctx.track(SigningTransaction)
         ctx.sharedData!!.signedTransaction =
                 ctx.serviceHub.signInitialTransaction(ctx.sharedData!!.transactionBuilder!!)
     }

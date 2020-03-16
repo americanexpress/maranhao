@@ -19,6 +19,7 @@ package com.americanexpress.blockchain.maranhao.workflow.simpleFlow.integration
 import co.paralleluniverse.fibers.Suspendable
 import com.americanexpress.blockchain.maranhao.NotaryStrategy
 import com.americanexpress.blockchain.maranhao.workflow.ConfigurableNotaryStrategy
+import com.americanexpress.blockchain.maranhao.workflow.PickNotaryStrategy
 import net.corda.core.contracts.*
 import net.corda.core.flows.*
 import net.corda.core.identity.AbstractParty
@@ -63,13 +64,17 @@ class SimpleFlowIntegrationTest {
 
     @InitiatingFlow
     @StartableByRPC
-    class Initiator(input: Simple) : com.americanexpress.blockchain.maranhao.workflow.simpleFlow.SimpleMultiStepFlowInitiator<Simple>(input) {
+    class Initiator(input: Simple) : com.americanexpress.blockchain.maranhao.workflow.simpleFlow.SimpleMultiStepFlowInitiator<Simple, SignedTransaction>(input) {
         override fun getListOfSigners(): List<Party> = listOf(bob)
         override fun getCommandData(): CommandData = SomeContract.Commands.Request()
         override fun getState(): ContractState = SomeState(value = 6)
         @Suspendable
-        override fun getStateId(): String =
+        override fun getStateId() =
                 "com.americanexpress.blockchain.maranhao.workflow.simpleFlow.integration.SomeContract"
+
+        override fun returnValue(): SignedTransaction {
+            return signedTransaction!!
+        }
     }
 
     @InitiatedBy(Initiator::class)
@@ -87,7 +92,42 @@ class SimpleFlowIntegrationTest {
 
     @InitiatingFlow
     @StartableByRPC
-    class InitiatorFlowWithConfigNotaryTest(input: Simple) : com.americanexpress.blockchain.maranhao.workflow.simpleFlow.SimpleMultiStepFlowInitiator<Simple>(input) {
+    class InitiatorFlowWithPickNotaryTest(input: Simple) :
+            com.americanexpress.blockchain.maranhao.workflow.simpleFlow.SimpleMultiStepFlowInitiator<Simple, SignedTransaction>(input) {
+
+        override fun getListOfSigners(): List<Party> = listOf(bob)
+        override fun getCommandData(): CommandData = SomeContract.Commands.Request()
+        override fun getState(): ContractState = SomeState(value = 6)
+        override fun getNotaryStrategy(): NotaryStrategy =
+                PickNotaryStrategy(CordaX500Name("Notary", "London", "GB").toString())
+        @Suspendable
+        override fun getStateId(): String =
+                "com.americanexpress.blockchain.maranhao.workflow.simpleFlow.integration.SomeContract"
+
+        override fun returnValue(): SignedTransaction {
+            return signedTransaction!!
+        }
+    }
+
+    @InitiatedBy(InitiatorFlowWithPickNotaryTest::class)
+    class AcceptorForInitiatorFlowWithPickNotary(val otherPartySession: FlowSession) : FlowLogic<SignedTransaction>() {
+
+        @Suspendable
+        override fun call(): SignedTransaction {
+            val signTransactionFlow = object : SignTransactionFlow(otherPartySession) {
+                override fun checkTransaction(stx: SignedTransaction) = requireThat {}
+            }
+            val txId = subFlow(signTransactionFlow).id
+            return subFlow(ReceiveFinalityFlow(otherPartySession, expectedTxId = txId))
+        }
+    }
+
+
+    @InitiatingFlow
+    @StartableByRPC
+    class InitiatorFlowWithConfigNotaryTest(input: Simple) :
+                com.americanexpress.blockchain.maranhao.workflow.simpleFlow.SimpleMultiStepFlowInitiator<Simple, SignedTransaction>(input) {
+
         override fun getListOfSigners(): List<Party> = listOf(bob)
         override fun getCommandData(): CommandData = SomeContract.Commands.Request()
         override fun getState(): ContractState = SomeState(value = 6)
@@ -95,6 +135,10 @@ class SimpleFlowIntegrationTest {
         @Suspendable
         override fun getStateId(): String =
                 "com.americanexpress.blockchain.maranhao.workflow.simpleFlow.integration.SomeContract"
+
+        override fun returnValue(): SignedTransaction {
+            return signedTransaction!!
+        }
     }
 
     @InitiatedBy(InitiatorFlowWithConfigNotaryTest::class)
@@ -154,4 +198,17 @@ class SimpleFlowIntegrationTest {
         assertEquals(signedTx, b.services.validatedTransactions.getTransaction(signedTx.id))
         assertEquals(1, b.services.vaultService.queryBy<LinearState>().states.size)
     }
+
+    @Test
+    fun `loan origination completion with flow using hand picked notary`() {
+        val flow = InitiatorFlowWithPickNotaryTest(Simple(5))
+        var future = a.startFlow(flow)
+        mockNetwork.runNetwork()
+
+        val signedTx = future.getOrThrow()
+        signedTx.verifySignaturesExcept(b.info.singleIdentity().owningKey)
+        assertEquals(signedTx, b.services.validatedTransactions.getTransaction(signedTx.id))
+        assertEquals(1, b.services.vaultService.queryBy<LinearState>().states.size)
+    }
+
 }
