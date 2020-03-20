@@ -32,7 +32,7 @@ import com.americanexpress.blockchain.maranhao.workflow.simpleFlow.SimpleFlowDat
  * @property signatories List<Party> - list of parties that need to sign off
  * @constructor
  */
-class SimpleFlowTxGeneratorStep<OUT> : com.americanexpress.blockchain.maranhao.workflow.simpleFlow.step.SimpleFlowStep<OUT> {
+class SimpleFlowTxGeneratorStep<OUT> : SimpleFlowStep<OUT> {
 
     /**
      * overridden function called by flow iteratively

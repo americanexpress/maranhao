@@ -18,7 +18,6 @@ buildscript {
         detekt_version = '1.0.0.RC6-4'
         jacoco_version = '0.8.2'
         tooling_api_version = '4.10.1'
-        corda_platform_version = '4'.toInteger()
         gson_version = '2.8.6'
     }
 

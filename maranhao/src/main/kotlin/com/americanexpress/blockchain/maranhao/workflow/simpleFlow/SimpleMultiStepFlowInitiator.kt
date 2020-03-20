@@ -101,7 +101,8 @@ abstract class SimpleMultiStepFlowInitiator<IN, OUT>(input: IN) : com.americanex
      */
 
     open var initialProcessingStep: com.americanexpress.blockchain.maranhao.workflow.simpleFlow.step
-        .SimpleFlowStep<OUT> = object: com.americanexpress.blockchain.maranhao.workflow.simpleFlow.step.SimpleFlowStep<OUT> {
+    .SimpleFlowStep<OUT> = object: com.americanexpress.blockchain.maranhao.workflow.simpleFlow.step
+    .SimpleFlowStep<OUT> {
         override fun execute(ctx: com.americanexpress.blockchain.maranhao.workflow
             .FlowContext<SimpleFlowData, OUT>) {
             // this is a NOP implementation

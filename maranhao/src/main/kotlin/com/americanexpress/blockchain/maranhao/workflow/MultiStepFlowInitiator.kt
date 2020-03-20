@@ -67,12 +67,16 @@ abstract class MultiStepFlowInitiator<IN, CTX, OUT>(val input: IN) : FlowLogic<O
     override val progressTracker = getFlowTracker().progressTracker()
 
     /**
-     * Function to fetch unconsumed linear state from vault. Flows will invoke this function to consume the 'unspend' state
+     * Function to fetch unconsumed linear state from vault. Flows will invoke this function
+     * to consume the 'unspend' state
+     *
      * @param linearId LinearId of the state to query for
      * @return StateAndRef<T>?
      *
      */
-    inline fun <reified T: LinearState> getUnconsumedLinearStateByLinearId(linearId: UniqueIdentifier): StateAndRef<T>? {
+    inline fun <reified T: LinearState>
+            getUnconsumedLinearStateByLinearId(linearId: UniqueIdentifier): StateAndRef<T>? {
+
         val queryCriteria = QueryCriteria.LinearStateQueryCriteria(
                 linearId = listOf(linearId),
                 status = Vault.StateStatus.UNCONSUMED
